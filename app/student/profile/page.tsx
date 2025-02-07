@@ -1,11 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -30,16 +28,12 @@ const formSchema = z.object({
   skills: z.string().min(2, {
     message: "Please enter at least one skill.",
   }),
-  about: z.string().min(10, {
-    message: "About me must be at least 10 characters.",
+  resumeUrl: z.string().url({
+    message: "Please enter a valid URL for your resume.",
   }),
 })
 
 export default function StudentProfile() {
-  const { data: session } = useSession()
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,38 +43,17 @@ export default function StudentProfile() {
       course: "",
       graduationYear: "",
       skills: "",
-      about: "",
+      resumeUrl: "",
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-    try {
-      const response = await fetch("/api/student/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      })
-      if (response.ok) {
-        router.push("/student/dashboard")
-      } else {
-        throw new Error("Failed to update profile")
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (!session) {
-    return <div>Please sign in to view this page.</div>
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values)
+    // Here you would typically send this data to your backend
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="container mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold mb-6">Student Profile</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -91,7 +64,7 @@ export default function StudentProfile() {
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder="Enter your full name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -104,7 +77,7 @@ export default function StudentProfile() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="johndoe@example.com" {...field} />
+                  <Input placeholder="Enter your email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,7 +90,7 @@ export default function StudentProfile() {
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="1234567890" {...field} />
+                  <Input placeholder="Enter your phone number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -130,7 +103,7 @@ export default function StudentProfile() {
               <FormItem>
                 <FormLabel>Course</FormLabel>
                 <FormControl>
-                  <Input placeholder="Computer Science" {...field} />
+                  <Input placeholder="Enter your course" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,7 +116,7 @@ export default function StudentProfile() {
               <FormItem>
                 <FormLabel>Graduation Year</FormLabel>
                 <FormControl>
-                  <Input placeholder="2024" {...field} />
+                  <Input placeholder="YYYY" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -156,29 +129,27 @@ export default function StudentProfile() {
               <FormItem>
                 <FormLabel>Skills</FormLabel>
                 <FormControl>
-                  <Input placeholder="JavaScript, React, Node.js" {...field} />
+                  <Textarea placeholder="Enter your skills (comma-separated)" className="resize-none" {...field} />
                 </FormControl>
-                <FormDescription>Enter your skills separated by commas.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           <FormField
             control={form.control}
-            name="about"
+            name="resumeUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>About Me</FormLabel>
+                <FormLabel>Resume URL</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Tell us about yourself" {...field} />
+                  <Input placeholder="Enter the URL of your resume" {...field} />
                 </FormControl>
+                <FormDescription>Upload your resume to a file hosting service and paste the URL here.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Updating..." : "Update Profile"}
-          </Button>
+          <Button type="submit">Save Profile</Button>
         </form>
       </Form>
     </div>

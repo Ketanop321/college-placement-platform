@@ -1,13 +1,18 @@
 "use client"
 
+import { useState } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { generateJobDescription } from "@/lib/gemini"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
-import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 
 const formSchema = z.object({
   jobTitle: z.string().min(2, {
@@ -37,6 +42,9 @@ const formSchema = z.object({
 })
 
 export default function JobPosting() {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const [description, setDescription] = useState("")
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -51,9 +59,31 @@ export default function JobPosting() {
     },
   })
 
+  const handleGenerateDescription = async () => {
+    const jobTitle = form.getValues("jobTitle")
+    const company = form.getValues("company")
+    const industry = "tech" // Placeholder for industry -  add proper industry input later.
+    const generatedDescription = await generateJobDescription(jobTitle, company, industry)
+    form.setValue("description", generatedDescription)
+  }
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
     // Here you would typically send this data to your backend
+    fetch("/api/jobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    }).then(() => router.push("/recruiter"))
+  }
+
+  if (!session || session.user.role !== "recruiter") {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+        <p>You must be signed in as a recruiter to view this page.</p>
+      </div>
+    )
   }
 
   return (
@@ -165,6 +195,9 @@ export default function JobPosting() {
               </FormItem>
             )}
           />
+          <Button type="button" onClick={handleGenerateDescription} className="bg-green-500 text-white mr-2">
+            Generate AI Description
+          </Button>
           <Button type="submit">Post Job</Button>
         </form>
       </Form>

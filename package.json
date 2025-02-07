@@ -60,6 +60,8 @@
     "zod": "latest",
     "@auth/core": "latest",
     "nodemailer": "latest",
+    "mongodb": "latest",
+    "next-auth": "latest",
     "socks": "latest",
     "snappy": "latest",
     "kerberos": "latest",
@@ -67,8 +69,6 @@
     "@mongodb-js/zstd": "latest",
     "mongodb-client-encryption": "latest",
     "@aws-sdk/credential-providers": "latest",
-    "mongodb": "latest",
-    "next-auth": "latest",
     "@next-auth/mongodb-adapter": "latest",
     "@google/generative-ai": "latest"
   },
